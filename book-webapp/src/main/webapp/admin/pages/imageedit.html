@@ -1,0 +1,165 @@
+<h3 class="page-title">图片管理</h3>
+<form role="form" id="uploadForm" method="post"
+  enctype="multipart/form-data">
+  <a href="javascript:;" class="file">选择图书图片进行上传 <input type="file"
+    id="bookimage_input" name="bookimg">
+  </a>
+  <div>
+    <button type="submit" class="btn btn-primary" id="upload_submit">上传</button>
+    <button type="reset" class="btn btn-warning" id="cancel">取消</button>
+    <p id="tips"></p>
+  </div>
+</form>
+<div class="panel">
+  <div class="panel-body">
+    <table class="table table-striped" id="ttable">
+    </table>
+    <button type="button" class="btn btn-primary pull-right"
+      id="backButton">返回</button>
+  </div>
+</div>
+
+<style>
+.file {
+  position: relative;
+  display: inline-block;
+  background: #D0EEFF;
+  border: 1px solid #99D3F5;
+  border-radius: 4px;
+  padding: 4px 12px;
+  overflow: hidden;
+  color: #1E88C7;
+  text-decoration: none;
+  text-indent: 0;
+  line-height: 20px;
+}
+
+.file input {
+  position: absolute;
+  font-size: 100px;
+  right: 0;
+  top: 0;
+  opacity: 0;
+}
+
+.file:hover {
+  background: #AADFFD;
+  border-color: #78C3F3;
+  color: #004974;
+  text-decoration: none;
+}
+</style>
+<script>
+  $('#backButton').on('click', function() {
+    $('#content').load('pages/bookmanager.html');
+  })
+  function getUser() {
+    $.ajax({
+      type : "GET",
+      url : "../bg/book/user/get_user",
+      contentType : 'application/json',
+      dataType : "json",
+      success : function(data) {
+        if (data.successResponse != true) {
+          alert(data.message);
+          window.location.href = 'login.html';
+        }
+        userId = data.datas[0].id;
+      }
+    });
+  }
+  function getBooks(id) {
+    $.ajax({
+      type : "GET",
+      url : "../bg/book/book_image/book_image/" + id,
+      contentType : 'application/json',
+      dataType : "json",
+      success : function(data) {
+        var html = "";
+        if (data.successResponse = true) {
+          html = html + '<thead><tr>';
+          html = html + '<th>图片列表</th>';
+          html = html + '<th width="10%">操 作</th>';
+          html = html + '<thead><tr>';
+          html = html + '<tbody>';
+          for (var i = 0; i < data.datas.length; i++) {
+            html = html + '<tr>';
+            html = html + '<th>' + data.datas[i].bookPath + '/' + data.datas[i].bookRealName + '</th>';
+            html = html + '<th>';
+            html = html + '<button type="button" data-id="'+data.datas[i].id+'" class="btn btn-danger deleteBook">删除</button>';
+            html = html + '</th>';
+            html = html + '<tr>';
+          }
+          html = html + '</tbody>';
+        }
+        $('#ttable').html(html);
+      }
+    });
+  }
+  $('#upload_submit').on('click', function() {
+    if ($('#bookimage_input').val() == null) {
+      alert("请选择文件！")
+    } else {
+      $('#tips').css('color', 'red');
+      $('#tips').text('上传中，请勿关闭此页面！');
+      $('#cancel').attr('disabled', 'disabled');
+      $('#upload_submit').attr('disabled', 'disabled');
+      var formData = new FormData($('#uploadForm')[0]);
+      formData.append('bookId', $('#modelId').val());
+      var id = $('#modelId').val();
+      $.ajax({
+        url : '../bg/book/book_image/upload',
+        type : 'POST',
+        data : formData,
+        cache : false,
+        contentType : false,
+        processData : false,
+        success : function(data) {
+          if (data.successResponse == true) {
+            alert("上传成功");
+            $('#cancel').attr('disabled', false);
+            $('#upload_submit').attr('disabled', false);
+            $('#tips').text('');
+            $('#content').load('pages/imageedit.html');
+          } else {
+            alert(data.message);
+            $('#tips').text('');
+            $('#cancel').attr('disabled', false);
+            $('#upload_submit').attr('disabled', false);
+            $('#content').load('pages/imageedit.html');
+          }
+        }
+      });
+    }
+  });
+  $(document).on('click', '.deleteBook', function(e) {
+    var $ele = $(e.target);
+    var id = $ele.attr('data-Id');
+    deleteModel(id);
+  })
+  function deleteModel(id) {
+    $.ajax({
+      type : "DELETE",
+      url : "../bg/book/book_image/single",
+      data : '{id:' + id + '}',
+      contentType : 'application/json',
+      dataType : "json",
+      success : function(data) {
+        if (data.successResponse == true) {
+          alert('删除成功');
+          $('#content').load('pages/imageedit.html');
+        } else {
+          alert(data.message);
+          $('#content').load('pages/imageedit.html');
+        }
+      }
+    });
+  }
+  $(function() {
+    if ($('#editType').val() == "3") {
+      getBooks($('#modelId').val());
+    }
+    var userId;
+    getUser();
+  });
+</script>

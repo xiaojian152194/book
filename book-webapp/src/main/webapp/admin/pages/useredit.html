@@ -1,0 +1,80 @@
+<div class="panel">
+  <div class="panel-heading">
+    <h3 class="panel-title">编辑用户信息</h3>
+  </div>
+  <div class="panel-body">
+    <input type="text" class="form-control" placeholder="账号" id="username"> <br>
+    <input type="password" class="form-control" placeholder="密码" id="password"> <br> 
+    <select class="form-control" id="haveAuthority">
+      <option value="N">普通用户</option>
+      <option value="Y">管理员</option>
+    </select> <br>
+    <button type="button" class="btn btn-success pull-right"
+      id="submitButton">确认</button>
+    <button type="button" class="btn btn-primary pull-right"
+      id="backButton">返回</button>
+  </div>
+</div>
+
+<script>
+  $('#backButton').on('click', function() {
+    $('#content').load('pages/usermanager.html');
+  })
+  function getModel(id) {
+    $.ajax({
+      type : "GET",
+      url : "../bg/book/user/" + id,
+      /* data : id, */
+      contentType : 'application/json',
+      dataType : "json",
+      success : function(data) {
+        if (data.successResponse == true) {
+          $('#username').val(data.datas[0].username);
+          $('#password').val(data.datas[0].password);
+          $('#haveAuthority').val(data.datas[0].haveAuthority);
+        } else {
+          alert(data.message);
+        }
+      }
+    });
+  }
+
+  $('#submitButton').on('click', function() {
+    var url = '';
+    var type = '';
+    if ($('#editType').val() == "2") {
+      type = 'PUT'
+      url = '../bg/book/user/single';
+    } else {
+      type = 'POST'
+      url = '../api/book/register';
+    }
+    var username = $('#username').val();
+    var password = $('#password').val();
+    var id = $('#modelId').val();
+    var haveAuthority = $('#haveAuthority').val();
+    var data = "{username:" + username + ",password:" + password + ",haveAuthority:" + haveAuthority + ",id:" + id + "}";
+    $.ajax({
+      type : type,
+      url : url,
+      data : data,
+      contentType : 'application/json',
+      dataType : "json",
+      success : function(data) {
+        if (data.successResponse == true) {
+          alert('保存成功');
+          $('#content').load('pages/usermanager.html');
+        } else {
+          alert(data.message);
+          $('#content').load('pages/usermanager.html');
+        }
+      }
+    });
+  })
+  $(function() {
+    if ($('#editType').val() == "2") {
+      getModel($('#modelId').val());
+    }
+  });
+</script>
+<!-- END INPUTS -->

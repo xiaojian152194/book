@@ -1,0 +1,103 @@
+<!-- TABLE STRIPED -->
+<h3 class="page-title">用户管理</h3>
+<button type="button" class="btn btn-primary" id="add">增加</button>
+<div class="panel">
+  <div class="panel-heading">
+    <h3 class="panel-title">用户列表</h3>
+  </div>
+  <div class="panel-body">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>用户名</th>
+          <th>创建时间</th>
+          <th>是否为管理员</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+      </tbody>
+    </table>
+  </div>
+</div>
+<!-- END TABLE STRIPED -->
+
+<script>
+  function getUsers() {
+    $
+        .ajax({
+          type : "GET",
+          url : "../bg/book/user",
+          contentType : 'application/json',
+          dataType : "json",
+          success : function(data) {
+            if (data.successResponse == true) {
+              var html = '';
+              for (var i = 0; i < data.datas.length; i++) {
+                html = html + '<tr>';
+                html = html + '<th>' + data.datas[i].username + '</th>';
+                html = html + '<th>' + getLocalTime(data.datas[i].createDate)
+                    + '</th>';
+                if (data.datas[i].haveAuthority == 'Y') {
+                  html = html + '<th>是</th>';
+                } else {
+                  html = html + '<th>否</th>';
+                }
+                html = html + '<th>';
+                html = html
+                    + '<button type="button" data-id="'+data.datas[i].id+'" class="btn btn-warning updateUser">修改</button>';
+                html = html
+                    + '<button type="button" data-id="'+data.datas[i].id+'" class="btn btn-danger deleteUser">删除</button>';
+                html = html + '</th>';
+                html = html + '</tr>';
+              }
+              $('#tableBody').html(html);
+            } else {
+              alert(data.message);
+            }
+          }
+        });
+  }
+
+  function deleteModel(id) {
+    $.ajax({
+      type : "DELETE",
+      url : "../bg/book/user/single",
+      data : '{id:' + id + '}',
+      contentType : 'application/json',
+      dataType : "json",
+      success : function(data) {
+        if (data.successResponse == true) {
+          alert('删除成功');
+          $('#content').load('pages/usermanager.html');
+        } else {
+          alert(data.message);
+          $('#content').load('pages/usermanager.html');
+        }
+      }
+    });
+  }
+  $('#add').on('click', function() {
+    $('#editType').val('1');
+    $('#content').load('pages/useredit.html');
+  })
+
+  $(document).off().on('click', '.updateUser', function(e) {
+    var $ele = $(e.target);
+    var id = $ele.attr('data-Id');
+    $('#editType').val('2');
+    $('#modelId').val(id);
+    $('#content').load('pages/useredit.html');
+  })
+
+  $(document).on('click', '.deleteUser', function(e) {
+    var $ele = $(e.target);
+    var id = $ele.attr('data-Id');
+    deleteModel(id);
+    getUsers();
+  })
+
+  $(function() {
+    getUsers();
+  });
+</script>
